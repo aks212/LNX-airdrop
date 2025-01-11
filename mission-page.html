@@ -5,6 +5,8 @@
 <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-firestore.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap');
 
@@ -365,6 +367,9 @@
             <div class="logo-container">
                 <img src="assets/img/logo.png" alt="Luna Explorer Coin Logo" class="logo" width="120" height="120">
             </div>
+             <h1>Luna Explorer Airdrop</h1>
+    <p id="status">Connecting to Telegram...</p>
+    <button id="connect-wallet-btn" class="btn">Connect Wallet</button>
             <h1>Luna Explorer (LNX) Airdrop</h1>
             <p class="tagline">Join the Mission, Explore the Future: Earn up to <strong>$50</strong> Worth of LNX Tokens in the Luna Explorer Airdrop!</p>
             
@@ -488,6 +493,26 @@
             }, 1000);
         });
 
+const provider = new WalletConnectProvider.default({
+        rpc: {
+            56: "https://bsc-dataseed.binance.org/", // Binance Smart Chain Mainnet
+            97: "https://data-seed-prebsc-1-s1.binance.org:8545/" // Testnet
+        },
+        chainId: 56, // Default to BSC Mainnet
+        qrcode: true
+    });
+
+    async function connectWallet() {
+        try {
+            await provider.enable();
+            const web3 = new Web3(provider);
+            const accounts = await web3.eth.getAccounts();
+            const walletAddress = accounts[0];
+            console.log("Connected wallet address:", walletAddress);
+
+            // Save wallet address along with Telegram info
+            saveUserWallet(walletAddress
+        
         document.getElementById('twitter-follow').addEventListener('click', function() {
             window.open('https://twitter.com/intent/follow?screen_name=LunaExplorerCoin', '_blank');
             completeTask(this);
@@ -539,6 +564,84 @@
                 });
             }, 2000);
         });
-       
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBlzsvvdvXIPGD5xqVl_B0jE3tjm3SZsAY",
+  authDomain: "luna-explorer-airdrop-85160.firebaseapp.com",
+  databaseURL: "https://luna-explorer-airdrop-85160-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "luna-explorer-airdrop-85160",
+  storageBucket: "luna-explorer-airdrop-85160.firebasestorage.app",
+  messagingSenderId: "193070614730",
+  appId: "1:193070614730:web:a9b26f56ec977cdb294c33",
+  measurementId: "G-P4CHRQ0EBZ"
+};
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+function saveTaskCompletion(userId, task) {
+    db.collection('users').doc(userId).set({
+        completedTasks: firebase.firestore.FieldValue.arrayUnion(task)
+    }, { merge: true });
+}
+async function updateTaskCompletion(userId, taskButton, taskName) {
+    saveTaskCompletion(userId, taskName); // Save task to Firebase
+    taskButton.classList.add('completed'); // Mark task as complete visually
+    completedTasks++;
+    updateProgress(); // Update the progress bar
+}
+
+const taskButtons = document.querySelectorAll('.task-btn');
+taskButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const taskName = button.textContent;
+        const userId = "user_id_here"; // Add logic for retrieving user IDs
+        updateTaskCompletion(userId, button, taskName);
+    });
+});
+
+ // Firebase Setup (Ensure this is initialized as shown in Step 1)
+const db = firebase.firestore();
+
+// Capture Telegram User Info
+const tg = window.Telegram.WebApp;
+
+function saveTelegramIdToFirestore(telegramId, username) {
+    db.collection("users").doc(telegramId.toString()).set({
+        telegramId: telegramId,
+        username: username || "Unknown",
+        walletAddress: null, // Placeholder for wallet address
+        tasksCompleted: [], // Empty at start
+        referralPoints: 0 // Default referral points
+    }, { merge: true }) // Merge avoids overwriting existing data
+    .then(() => {
+        console.log("Telegram user info saved successfully!");
+        document.getElementById("status").textContent = "Your Telegram ID has been saved!";
+    })
+    .catch((error) => {
+        console.error("Error saving user info to Firestore:", error);
+        document.getElementById("status").textContent = `Error saving user info: ${error.message}`;
+    });
+}
+
+// Check if Telegram user is opening the app
+window.onload = function() {
+    const user = tg.initDataUnsafe.user;
+    if (user) {
+        const telegramId = user.id;
+        const username = user.username;
+        document.getElementById("status").textContent = `Hello, @${username}!`;
+        saveTelegramIdToFirestore(telegramId, username);
+    } else {
+        document.getElementById("status").textContent = "Please open this app through Telegram!";
+    }
+};       
     </script>
 </body></html>
